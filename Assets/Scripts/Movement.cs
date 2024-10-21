@@ -1,64 +1,69 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+
+[RequireComponent(typeof(CharacterController))]
 public class Movement : MonoBehaviour
 {
- public float walkSpeed = 5f;        // Speed of walking
-    public float runSpeed = 10f;        // Speed of running
-    public float jumpForce = 5f;        // Force of jumping
-    public Transform cameraTransform;   // Reference to the camera transform
-    public float mouseSensitivity = 2f; // Mouse sensitivity for camera control
+    private const string Horizontal = "Horizontal";
+    private const string Vertical = "Vertical";
+    private const string MouseX = "Mouse X";
+    private const string MouseY = "Mouse Y";
+    private const string Jump = "Jump";
+    
+    [SerializeField]private float _walkSpeed = 5f; 
+    [SerializeField]private float _runSpeed = 10f; 
+    [SerializeField]private float _jumpForce = 5f; 
+    [SerializeField]private Transform _cameraTransform; 
+    [SerializeField]private float _mouseSensitivity = 2f; 
 
-    private CharacterController controller;
-    private Vector3 playerVelocity;
-    private bool isJumping;
+    private CharacterController _controller;
+    private Vector3 _playerVelocity;
+    private bool _isJumping;
+    private float _moveSpeed;
+    private float _mouseX;
+    private float _mouseY;
+    private Vector3 _move;
+    private float _angle = 90;
 
-    void Start()
+    private void Start()
     {
-        controller = GetComponent<CharacterController>();
-
-        // Lock the cursor to the center of the screen
+        _controller = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    void Update()
+    private void Update()
     {
-        // Player movement
-        float moveSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
-        Vector3 move = transform.right * horizontal + transform.forward * vertical;
-        controller.Move(move * moveSpeed * Time.deltaTime);
-
-        // Player jumping
-        if (controller.isGrounded)
+        _moveSpeed = Input.GetKey(KeyCode.LeftShift) ? _runSpeed : _walkSpeed;
+        float horizontal = Input.GetAxis(Horizontal);
+        float vertical = Input.GetAxis(Vertical);
+        _move = transform.right * -horizontal + transform.forward * -vertical;
+        _controller.Move(_move * _moveSpeed * Time.deltaTime);
+        
+        if (_controller.isGrounded)
         {
-            playerVelocity.y = 0f;
-            isJumping = false;
+            _playerVelocity.y = 0f;
+            _isJumping = false;
         }
 
-        if (Input.GetButtonDown("Jump") && !isJumping)
+        if (Input.GetButtonDown(Jump) && !_isJumping)
         {
-            playerVelocity.y += Mathf.Sqrt(jumpForce * -2f * Physics.gravity.y);
-            isJumping = true;
+            _playerVelocity.y += Mathf.Sqrt(_jumpForce * -2f * Physics.gravity.y);
+            _isJumping = true;
         }
+        
+        _playerVelocity.y += Physics.gravity.y * Time.deltaTime;
+        _controller.Move(_playerVelocity * Time.deltaTime);
+        _mouseX = Input.GetAxis(MouseX) * _mouseSensitivity;
+        _mouseY = Input.GetAxis(MouseY) * _mouseSensitivity;
+        transform.Rotate(Vector3.up * _mouseX);
 
-        // Apply gravity to the player
-        playerVelocity.y += Physics.gravity.y * Time.deltaTime;
-        controller.Move(playerVelocity * Time.deltaTime);
-
-        // Player camera control
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-        transform.Rotate(Vector3.up * mouseX);
-
-        // Rotate the camera vertically
-        Vector3 currentRotation = cameraTransform.rotation.eulerAngles;
-        float desiredRotationX = currentRotation.x - mouseY;
+        Vector3 currentRotation = _cameraTransform.rotation.eulerAngles;
+        float desiredRotationX = currentRotation.x - _mouseY;
+        
         if (desiredRotationX > 180)
             desiredRotationX -= 360;
-        desiredRotationX = Mathf.Clamp(desiredRotationX, -90f, 90f);
-        cameraTransform.rotation = Quaternion.Euler(desiredRotationX, currentRotation.y, currentRotation.z);
+        
+        desiredRotationX = Mathf.Clamp(desiredRotationX, -_angle, _angle);
+        _cameraTransform.rotation = Quaternion.Euler(desiredRotationX, currentRotation.y, currentRotation.z);
     }
 }
