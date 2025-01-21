@@ -1,17 +1,13 @@
 using UnityEngine;
 
-
 [RequireComponent(typeof(CharacterController))]
 public class Movement : MonoBehaviour
 {
-    private const string Horizontal = "Horizontal";
-    private const string Vertical = "Vertical";
-    private const string MouseX = "Mouse X";
-    private const string MouseY = "Mouse Y";
     private const string Jump = "Jump";
     
+    [SerializeField] private Joystick _joystick;
+    [SerializeField] private Joystick _rotationJoystick;
     [SerializeField]private float _walkSpeed = 5f; 
-    [SerializeField]private float _runSpeed = 10f; 
     [SerializeField]private float _jumpForce = 5f; 
     [SerializeField]private Transform _cameraTransform; 
     [SerializeField]private float _mouseSensitivity = 2f; 
@@ -28,16 +24,23 @@ public class Movement : MonoBehaviour
     private void Start()
     {
         _controller = GetComponent<CharacterController>();
-        Cursor.lockState = CursorLockMode.Locked;
+        // Cursor.lockState = CursorLockMode.Locked;
     }
 
+    public void Move(Vector2 movement)
+    {
+        _move = transform.right * -movement.x + transform.forward * -movement.y;
+        _controller.Move(_move * _walkSpeed * Time.deltaTime);
+    }
+    
+    
+    
     private void Update()
     {
-        _moveSpeed = Input.GetKey(KeyCode.LeftShift) ? _runSpeed : _walkSpeed;
-        float horizontal = Input.GetAxis(Horizontal);
-        float vertical = Input.GetAxis(Vertical);
+        /*float horizontal = _joystick.Horizontal;
+        float vertical = _joystick.Vertical;
         _move = transform.right * -horizontal + transform.forward * -vertical;
-        _controller.Move(_move * _moveSpeed * Time.deltaTime);
+        _controller.Move(_move * _walkSpeed * Time.deltaTime);*/
         
         if (_controller.isGrounded)
         {
@@ -53,8 +56,11 @@ public class Movement : MonoBehaviour
         
         _playerVelocity.y += Physics.gravity.y * Time.deltaTime;
         _controller.Move(_playerVelocity * Time.deltaTime);
-        _mouseX = Input.GetAxis(MouseX) * _mouseSensitivity;
-        _mouseY = Input.GetAxis(MouseY) * _mouseSensitivity;
+
+        /*_mouseX = _rotationJoystick.Horizontal*_mouseSensitivity;
+        _mouseY = _rotationJoystick.Vertical*_mouseSensitivity;
+        
+       
         transform.Rotate(Vector3.up * _mouseX);
 
         Vector3 currentRotation = _cameraTransform.rotation.eulerAngles;
@@ -64,6 +70,6 @@ public class Movement : MonoBehaviour
             desiredRotationX -= 360;
         
         desiredRotationX = Mathf.Clamp(desiredRotationX, -_angle, _angle);
-        _cameraTransform.rotation = Quaternion.Euler(desiredRotationX, currentRotation.y, currentRotation.z);
+        _cameraTransform.rotation = Quaternion.Euler(desiredRotationX, currentRotation.y, currentRotation.z);*/
     }
 }
